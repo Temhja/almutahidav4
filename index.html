@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>الشركة المتحدة للتوابل — اطلب لمطعمك</title>
 <meta name="description" content="خلطات وبهارات للمطاعم والمطابخ التجارية ببغداد. اختار الصنف والكمية والطلب يوصل على الواتساب.">
+<link rel="preconnect" href="https://wsrv.nl" crossorigin>
+<link rel="dns-prefetch" href="https://wsrv.nl">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -60,35 +62,35 @@ body.locked{overflow:hidden}
 .stage.dragging{cursor:grabbing}
 .floor-ring{position:absolute;left:50%;border:1.5px dashed rgba(13,74,38,.22);border-radius:50%;pointer-events:none;transition:opacity .5s}
 .stage.grid-mode .floor-ring{opacity:0}
-.look{position:absolute;left:50%;top:0;width:0;height:0;will-change:transform,filter}
+.look{position:absolute;left:50%;top:0;width:0;height:0;will-change:transform,opacity;contain:layout style}
 .look .fig{position:absolute;left:0;bottom:0;transform:translateX(-50%)}
 .crop{position:relative;overflow:visible}
 .crop img{position:absolute;max-width:none;height:auto;pointer-events:none;-webkit-user-drag:none}
-.look .dishbox{position:absolute;z-index:0;left:50%;bottom:42%;width:150%;transform:translateX(-50%);filter:drop-shadow(0 16px 16px rgba(0,0,0,.16))}
-.look .packbox{z-index:1;width:100%;filter:drop-shadow(0 10px 14px rgba(0,0,0,.2))}
+.look .dishbox{position:absolute;z-index:0;left:50%;bottom:42%;width:150%;transform:translateX(-50%)}
+.look .packbox{z-index:1;width:100%}
 .look .shadow{position:absolute;z-index:0;left:50%;bottom:-4%;width:90%;height:9%;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(0,0,0,.28),rgba(0,0,0,.08) 62%,transparent);filter:blur(3px)}
-.stage.morph .look{transition:transform .85s var(--ease),filter .85s,opacity .85s}
+.stage.morph .look{transition:transform .8s var(--ease),opacity .8s}
 
 .hero-copy{position:absolute;z-index:5;top:calc(84px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);text-align:center;width:min(640px,calc(100% - 40px));pointer-events:none}
 .hero-copy h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4.2vw,44px);line-height:1.15;text-wrap:balance}
 .hero-copy h1 em{font-style:normal;color:var(--green)}
 .hero-copy p{margin:8px 0 0;color:var(--ink-2);font-size:15px}
 
-.switch{position:absolute;z-index:25;top:56%;right:max(16px,env(safe-area-inset-right,0px));transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;padding:5px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.switch{position:absolute;z-index:25;top:56%;right:max(16px,env(safe-area-inset-right,0px));transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;padding:5px;border-radius:999px;background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.08)}
 .switch .knob{position:absolute;left:5px;top:5px;width:44px;height:44px;border-radius:50%;background:var(--green);transition:transform .55s cubic-bezier(.5,1.6,.4,1)}
 .switch[data-mode="grid"] .knob{transform:translateY(48px)}
 .switch button{position:relative;z-index:1;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--ink-2);transition:color .3s}
 .switch button[aria-pressed="true"]{color:var(--paper)}
 .switch svg{width:20px;height:20px}
 
-.ticks{position:absolute;z-index:25;top:56%;left:max(16px,env(safe-area-inset-left,0px));transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 8px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.ticks{position:absolute;z-index:25;top:56%;left:max(16px,env(safe-area-inset-left,0px));transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 8px;border-radius:999px;background:var(--paper);border:1px solid var(--line)}
 .ticks .num{font:600 11px var(--f-mono);margin-bottom:3px}
 .ticks button{width:18px;height:8px;display:grid;place-items:center}
 .ticks button i{width:6px;height:6px;border-radius:50%;background:rgba(18,20,16,.25);transition:all .3s var(--ease)}
 .ticks button.on{height:18px}
 .ticks button.on i{height:16px;border-radius:3px;background:var(--green)}
 
-.dock{position:absolute;z-index:20;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:16px;padding:10px;padding-inline-start:22px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 14px 40px rgba(0,0,0,.10);max-width:calc(100vw - 32px)}
+.dock{position:absolute;z-index:20;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:16px;padding:10px;padding-inline-start:22px;border-radius:999px;background:var(--paper);border:1px solid var(--line);box-shadow:0 14px 40px rgba(0,0,0,.10);max-width:calc(100vw - 32px)}
 .cap{min-width:0}
 .cap .row1{display:flex;align-items:baseline;gap:10px}
 .cap .no{font:600 12px var(--f-mono);color:var(--ink-2)}
@@ -119,7 +121,7 @@ body.locked{overflow:hidden}
 .chip.on{background:var(--green);color:var(--paper);border-color:var(--green)}
 .chip .n{font-family:var(--f-mono);font-size:11.5px;opacity:.65;margin-inline-start:4px}
 .sections{max-width:1240px;margin:0 auto;padding:0 max(20px,env(safe-area-inset-right,0px)) 0 max(20px,env(safe-area-inset-left,0px))}
-.sec{padding-top:34px;scroll-margin-top:130px}
+.sec{padding-top:34px;scroll-margin-top:130px;content-visibility:auto;contain-intrinsic-size:auto 640px}
 .sec h3{margin:0 0 14px;font-family:var(--f-display);font-size:22px;font-weight:600;display:flex;align-items:baseline;gap:10px}
 .sec h3 span{font:500 12.5px var(--f-mono);color:var(--ink-2)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:12px}
@@ -139,7 +141,7 @@ body.locked{overflow:hidden}
 .empty{padding:40px 0;color:var(--ink-2);text-align:center}
 
 /* ───── view + receipt ───── */
-.lightbox{position:fixed;inset:0;z-index:50;background:rgba(231,228,220,.95);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.lightbox{position:fixed;inset:0;z-index:50;background:rgba(231,228,220,.985)}
 .lb-head{position:absolute;z-index:3;inset:calc(16px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) auto max(20px,env(safe-area-inset-left,0px));display:flex;justify-content:space-between;align-items:center}
 .lb-title{display:flex;align-items:baseline;gap:12px}
 .lb-title .no{font:600 13px var(--f-mono);color:var(--ink-2)}
@@ -147,7 +149,7 @@ body.locked{overflow:hidden}
 .x{width:44px;height:44px;border-radius:50%;background:var(--paper);border:1px solid var(--line);display:grid;place-items:center}
 .x svg{width:18px;height:18px}
 .lb-fig{position:absolute;z-index:2;top:calc(80px + env(safe-area-inset-top,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));right:max(20px,6vw);left:440px;display:grid;place-items:center}
-.lb-fig .frame{position:relative;width:min(100%,560px);max-height:100%;animation:grow .6s var(--ease)}
+.lb-fig .frame{position:relative;width:min(100%,560px);max-height:100%;animation:grow .4s var(--ease)}
 .lb-fig .frame .flat{max-height:100%;object-fit:contain}
 .lb-fig .frame.duo{width:min(42%,260px)}
 .lb-fig .frame .dishbox{position:absolute;left:50%;bottom:40%;width:175%;transform:translateX(-50%);filter:drop-shadow(0 20px 20px rgba(0,0,0,.18))}
@@ -155,7 +157,7 @@ body.locked{overflow:hidden}
 .lb-fig .frame .flat{width:100%;border-radius:18px;background:#fff;box-shadow:0 20px 40px rgba(0,0,0,.08)}
 @keyframes grow{from{transform:scale(.55) translateY(10%);opacity:.3}to{transform:none;opacity:1}}
 
-.receipt{position:fixed;z-index:55;top:0;left:max(36px,env(safe-area-inset-left,0px));width:372px;background:var(--paper);font-family:var(--f-mono);font-size:13px;padding:24px 22px 28px;box-shadow:0 18px 40px rgba(0,0,0,.16);max-height:calc(100vh - 24px);overflow:auto;clip-path:inset(0 0 100% 0);transform:translateY(-14px);transition:clip-path 1.5s steps(16,end),transform 1.5s steps(16,end)}
+.receipt{position:fixed;z-index:55;top:0;left:max(36px,env(safe-area-inset-left,0px));width:372px;background:var(--paper);font-family:var(--f-mono);font-size:13px;padding:24px 22px 28px;box-shadow:0 18px 40px rgba(0,0,0,.16);max-height:calc(100vh - 24px);overflow:auto;clip-path:inset(0 0 100% 0);transform:translateY(-14px);transition:clip-path .65s steps(10,end),transform .65s steps(10,end)}
 .receipt.out{clip-path:inset(0 0 -20px 0);transform:none}
 .rc-h{text-align:center;font-family:var(--f-display);font-size:24px;font-weight:700;line-height:1.1}
 .rc-sub{text-align:center;color:var(--ink-2);font-size:11.5px;margin-top:5px}
@@ -301,6 +303,8 @@ const DATA = [{"category": "الأكثر طلباً", "products": [{"name": "ت�
 const RING = [{"name": "تخمير كنتاكي", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090144_7ce02b0d-0737-418b-a854-a0932f3867c8.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090613_76adfb21-8d3c-4879-9cb2-dd32016b85c6.png", "pb": [0.275, 0.048, 0.707, 0.892, 750, 500], "db": [0.04, 0.038, 0.877, 0.953, 2048, 2048]}, {"name": "زنجر", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090146_64ffc668-f2f0-48c1-82a9-f26e7bf5927c.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_085949_30e9c87d-fd5a-48eb-9a08-8f8ffc04e221.png", "pb": [0.287, 0.04, 0.718, 0.927, 750, 500], "db": [0.01, 0.087, 0.992, 0.923, 2048, 2048]}, {"name": "كرسبي", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090147_9328e660-0608-4e99-9f89-520557e4b8f6.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090606_1b38dbb7-c1cf-4622-b49a-73d47fdaa9ab.png", "pb": [0.308, 0.043, 0.698, 0.943, 750, 500], "db": [0.057, 0.105, 0.947, 0.912, 2048, 2048]}, {"name": "شاورما دجاج", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090148_9ced1a16-c8ef-4efb-a692-6dc2101668c9.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090002_9e59cec7-622a-4229-b315-f8f97baf3665.png", "pb": [0.31, 0.095, 0.693, 0.895, 750, 500], "db": [0.017, 0.053, 0.98, 0.97, 2048, 2048]}, {"name": "شاورما لحم", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090150_5bfede72-1971-497a-91a0-aeb0f8c2b4da.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090216_56216299-6367-4cd4-8a04-96adae520db4.png", "pb": [0.285, 0.092, 0.717, 0.927, 750, 500], "db": [0.21, 0.0, 0.79, 1.0, 2048, 2048]}, {"name": "بركر لحم", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090151_ee4ca85b-61a0-4370-9890-32c482d2af1d.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090608_47f57ab2-b86e-4ab3-9c2b-140f4b18d86f.png", "pb": [0.325, 0.135, 0.687, 0.87, 750, 500], "db": [0.003, 0.13, 0.988, 0.897, 2048, 2048]}, {"name": "تمن ريزو كلاسك", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090153_db1d8881-225d-4271-a800-3090a0068477.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090545_c43e7563-69a2-4bd9-a2e4-f71a5085e4ae.png", "pb": [0.297, 0.045, 0.723, 0.927, 750, 500], "db": [0.008, 0.045, 0.995, 0.932, 2048, 2048]}, {"name": "كبسة دجاج", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090102_af42d3ec-e96f-4c48-8c08-4aa35848d768.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090011_99e26ffe-ec1e-47fe-9978-969da9e5dedc.png", "pb": [0.298, 0.19, 0.715, 0.858, 750, 500], "db": [0.005, 0.055, 0.992, 0.957, 2048, 2048]}, {"name": "مندي لحم", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090103_e2857d32-82ae-438b-bc49-f5277d559735.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090546_77cadd6c-a8de-4b04-ac74-ec8c91804318.png", "pb": [0.323, 0.098, 0.688, 0.907, 750, 500], "db": [0.032, 0.195, 0.962, 0.825, 2048, 2048]}];
 
 const fmt = n => Number(n).toLocaleString("en-US");
+/* resized WebP through a global image CDN; originals stay in Drive / Higgsfield */
+const px = (u, w) => u ? `https://wsrv.nl/?url=${encodeURIComponent(u)}&w=${w}&output=webp&q=80` : u;
 const pad = n => String(n).padStart(2,"0");
 const $ = id => document.getElementById(id);
 
@@ -325,7 +329,7 @@ $("totalCount").textContent = ALL.length;
 
 /* ---------- ring ---------- */
 const N = RING.length, STEP = 2*Math.PI/N;
-let rot = 0, target = 0, vel = 0, mode = "ring";
+let rot = 0, target = 0, vel = 0, mode = "ring", lastRot = -1;
 let dragging = false, dragX = 0, dragY = 0, dragStart = 0, moved = 0, lastDx = 0, axis = null;
 let lastInteract = performance.now(), lbOpen = false, bagOpen = false;
 const stage = $("stage"), ring = $("floorRing");
@@ -338,13 +342,13 @@ function geo(){
 /* bb = [x0,y0,x1,y1] of the visible pixels, as fractions; w,h = source size. The box takes the subject's shape; the image is shifted inside it. */
 function crop(cls, src, bb, alt){
   const [x0,y0,x1,y1,w,h] = bb, bw = x1-x0, bh = y1-y0;
-  return `<div class="crop ${cls}" style="aspect-ratio:${(bw*w).toFixed(1)}/${(bh*h).toFixed(1)}"><img src="${src}" alt="${alt}" style="width:${(100/bw).toFixed(2)}%;left:${(-x0/bw*100).toFixed(2)}%;top:${(-y0/bh*100).toFixed(2)}%"></div>`;
+  return `<div class="crop ${cls}" style="aspect-ratio:${(bw*w).toFixed(1)}/${(bh*h).toFixed(1)}"><img src="${src}" alt="${alt}" decoding="async" style="width:${(100/bw).toFixed(2)}%;left:${(-x0/bw*100).toFixed(2)}%;top:${(-y0/bh*100).toFixed(2)}%"></div>`;
 }
 const ringItems = RING.map(r => ({...byName(r.name), ...r}));
 const els = ringItems.map((it,i) => {
   const d = document.createElement("div");
   d.className = "look";
-  d.innerHTML = `<div class="fig">${crop("dishbox", it.dish, it.db, "")}<div class="shadow"></div>${crop("packbox", it.pack, it.pb, it.name)}</div>`;
+  d.innerHTML = `<div class="fig">${crop("dishbox", px(it.dish, 560), it.db, "")}<div class="shadow"></div>${crop("packbox", px(it.pack, 520), it.pb, it.name)}</div>`;
   d.addEventListener("click", () => { if (moved < 6) { if (mode === "grid" || i === frontIndex()) openProduct(it, true); else goTo(i); } });
   stage.appendChild(d);
   return d;
@@ -364,7 +368,6 @@ function layoutRing(){
     const x = -Math.sin(a) * g.RX, y = g.foot - (1 - t) * g.RY * 2;
     const s = 0.38 + 0.62 * Math.pow(t, 1.4);
     el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) scale(${s.toFixed(4)})`;
-    el.style.filter = `blur(${((1-t)*2.6).toFixed(2)}px)`;
     el.style.opacity = (0.62 + 0.38*t).toFixed(3);
     el.style.zIndex = Math.round(t*100);
   });
@@ -377,12 +380,13 @@ function layoutGrid(){
   els.forEach((el,i) => {
     const c = i % 3, r = Math.floor(i/3);
     el.style.transform = `translate3d(${(1-c)*cw}px,${top + (r+1)*ch}px,0) scale(${s.toFixed(4)})`;
-    el.style.filter = "blur(0px)"; el.style.opacity = 1; el.style.zIndex = 10 + r;
+    el.style.opacity = 1; el.style.zIndex = 10 + r;
     el.style.transitionDelay = `${(r*2 + c) * 55}ms`;
   });
 }
 function setMode(m){
   if (m === mode) return;
+  lastRot = -1;
   mode = m;
   $("switch").dataset.mode = m;
   $("vRing").setAttribute("aria-pressed", m === "ring");
@@ -411,7 +415,7 @@ function tick(now){
     if (!dragging && !lbOpen && !bagOpen && heroVisible && now - lastInteract > 5000){ target += 1; lastInteract = now; }
     if (!dragging){ vel += (target - rot) * 0.08; vel *= 0.74; rot += vel; if (Math.abs(target-rot) < 5e-4 && Math.abs(vel) < 5e-4) rot = target; }
     else rot += (target - rot) * 0.5;
-    if (!stage.classList.contains("morph")) layoutRing();
+    if (!stage.classList.contains("morph") && Math.abs(rot - lastRot) > 1e-4) { layoutRing(); lastRot = rot; }
     updateCaption();
   }
   requestAnimationFrame(tick);
@@ -435,7 +439,7 @@ addEventListener("keydown", e => {
   if (e.key === "ArrowRight"){ target -= 1; lastInteract = performance.now(); }
   if (e.key === "Enter") openProduct(ringItems[frontIndex()], true);
 });
-addEventListener("resize", () => { sizeFigs(); mode === "grid" ? layoutGrid() : layoutRing(); });
+addEventListener("resize", () => { sizeFigs(); lastRot = -1; mode === "grid" ? layoutGrid() : layoutRing(); });
 addEventListener("scroll", () => $("top").classList.toggle("solid", scrollY > 40), {passive:true});
 $("vRing").onclick = () => setMode("ring");
 $("vGrid").onclick = () => setMode("grid");
@@ -445,7 +449,7 @@ $("plus").onclick = () => openProduct(ringItems[frontIndex()], true);
 const chips = $("chips"), sections = $("sections");
 function cardHTML(p){
   return `<button class="card" data-id="${p.id}">
-    <div class="ph">${p.img ? `<img loading="lazy" src="${p.img}" alt="${p.name}">` : `<span class="none">م</span>`}</div>
+    <div class="ph">${p.img ? `<img loading="lazy" decoding="async" width="360" height="240" src="${px(p.img, 360)}" alt="${p.name}">` : `<span class="none">م</span>`}</div>
     <div class="body"><span class="nm">${p.name}</span>${p.price ? `<span class="pr">${fmt(p.price)} د.ع / كغم</span>` : `<span class="pr ask">السعر حسب الكمية</span>`}</div>
     <div class="foot"><small>1 · 5 · 10 كغم</small><span class="add-mini" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></div>
   </button>`;
@@ -489,8 +493,8 @@ function openProduct(p, fromRing){
   $("lbNo").textContent = p.cat; $("lbName").textContent = p.name;
   const it = ri >= 0 ? ringItems[ri] : null;
   frame.className = it ? "frame duo" : "frame";
-  frame.innerHTML = it ? `${crop("dishbox", it.dish, it.db, "")}${crop("packbox", it.pack, it.pb, p.name)}`
-                       : (p.img ? `<img class="flat" src="${p.img}" alt="${p.name}">` : "");
+  frame.innerHTML = it ? `${crop("dishbox", px(it.dish, 900), it.db, "")}${crop("packbox", px(it.pack, 760), it.pb, p.name)}`
+                       : (p.img ? `<img class="flat" src="${px(p.img, 900)}" alt="${p.name}" decoding="async">` : "");
   frame.style.animation = "none"; void frame.offsetWidth; frame.style.animation = "";
   lb.hidden = false;
   printReceipt(productReceipt());
@@ -586,6 +590,8 @@ $("lbClose").onclick = closeAll;
 $("bagBtn").onclick = () => bagOpen ? closeAll() : openBag();
 
 sizeFigs(); layoutRing(); updateCaption(); requestAnimationFrame(tick);
+/* after first paint, warm the big product views so the receipt opens instantly */
+addEventListener("load", () => setTimeout(() => ringItems.forEach(it => { new Image().src = px(it.dish, 900); new Image().src = px(it.pack, 760); }), 1200));
 </script>
 </body>
 </html>
