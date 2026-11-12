@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>الشركة المتحدة للتوابل — اطلب لمطعمك</title>
+<meta name="description" content="خلطات وبهارات للمطاعم والمطابخ التجارية ببغداد. اختار الصنف والكمية والطلب يوصل على الواتساب.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one-screen hero (ring of 9 mixes, each pack standing in front of its dish) over a scrolling catalogue of every product.
+   The thermal receipt prints down from the top for a product and for the order. Brand green from the packs; everything else is ink on a warm floor. */
+:root{
+  --floor:#e7e4dc;
+  --floor-edge:#d6d2c7;
+  --ink:#121410;
+  --ink-2:#5b5d55;
+  --paper:#fbfaf6;
+  --green:#0d4a26;        /* Al-Mutahida pack green */
+  --green-2:#1d6b3a;
+  --line:rgba(18,20,16,.12);
+  --glass:rgba(251,250,246,.76);
+  --f-display:"Reem Kufi","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","IBM Plex Sans Arabic",ui-monospace,monospace;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--floor);color:var(--ink);font-family:var(--f-body);font-size:15px;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--green);outline-offset:3px;border-radius:999px}
+[hidden]{display:none!important}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+body.locked{overflow:hidden}
+
+/* ───── top bar ───── */
+.top{position:fixed;z-index:40;inset:0 0 auto 0;padding:calc(12px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) 10px max(20px,env(safe-area-inset-left,0px));transition:background .3s,box-shadow .3s}
+.top.solid{background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 0 var(--line)}
+.top-in{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;max-width:1240px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.seal{width:42px;height:42px;border-radius:50%;background:var(--green);color:var(--paper);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:18px;box-shadow:inset 0 0 0 3px var(--paper),0 0 0 1.5px var(--green)}
+.brand b{display:block;font-family:var(--f-display);font-weight:700;font-size:19px;line-height:1.1}
+.brand small{display:block;font-size:11.5px;color:var(--ink-2);font-weight:500}
+.since{text-align:center;font-family:var(--f-mono);font-size:12px;color:var(--ink-2);letter-spacing:.06em}
+.actions{display:flex;gap:8px;justify-content:flex-end}
+.pill{height:40px;padding:0 15px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;text-decoration:none;transition:background .2s,transform .2s}
+.pill:hover{background:var(--paper)}
+.pill:active{transform:scale(.96)}
+.pill svg{width:17px;height:17px}
+.count{min-width:21px;height:21px;border-radius:11px;background:var(--green);color:var(--paper);font:600 11.5px/21px var(--f-mono);text-align:center;padding:0 6px;transition:transform .3s var(--ease)}
+.count.bump{transform:scale(1.4)}
+
+/* ───── hero ring ───── */
+.hero{position:relative;height:100svh;min-height:600px;overflow:hidden;background:radial-gradient(120% 95% at 50% 64%,var(--floor) 50%,var(--floor-edge) 100%)}
+.stage{position:absolute;inset:0;z-index:1;touch-action:pan-y;cursor:grab}
+.stage.dragging{cursor:grabbing}
+.floor-ring{position:absolute;left:50%;border:1.5px dashed rgba(13,74,38,.22);border-radius:50%;pointer-events:none;transition:opacity .5s}
+.stage.grid-mode .floor-ring{opacity:0}
+.look{position:absolute;left:50%;top:0;width:0;height:0;will-change:transform,filter}
+.look .fig{position:absolute;left:0;bottom:0;transform:translateX(-50%)}
+.crop{position:relative;overflow:visible}
+.crop img{position:absolute;max-width:none;height:auto;pointer-events:none;-webkit-user-drag:none}
+.look .dishbox{position:absolute;z-index:0;left:50%;bottom:42%;width:150%;transform:translateX(-50%);filter:drop-shadow(0 16px 16px rgba(0,0,0,.16))}
+.look .packbox{z-index:1;width:100%;filter:drop-shadow(0 10px 14px rgba(0,0,0,.2))}
+.look .shadow{position:absolute;z-index:0;left:50%;bottom:-4%;width:90%;height:9%;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(0,0,0,.28),rgba(0,0,0,.08) 62%,transparent);filter:blur(3px)}
+.stage.morph .look{transition:transform .85s var(--ease),filter .85s,opacity .85s}
+
+.hero-copy{position:absolute;z-index:5;top:calc(84px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);text-align:center;width:min(640px,calc(100% - 40px));pointer-events:none}
+.hero-copy h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4.2vw,44px);line-height:1.15;text-wrap:balance}
+.hero-copy h1 em{font-style:normal;color:var(--green)}
+.hero-copy p{margin:8px 0 0;color:var(--ink-2);font-size:15px}
+
+.switch{position:absolute;z-index:25;top:56%;right:max(16px,env(safe-area-inset-right,0px));transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;padding:5px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.switch .knob{position:absolute;left:5px;top:5px;width:44px;height:44px;border-radius:50%;background:var(--green);transition:transform .55s cubic-bezier(.5,1.6,.4,1)}
+.switch[data-mode="grid"] .knob{transform:translateY(48px)}
+.switch button{position:relative;z-index:1;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--ink-2);transition:color .3s}
+.switch button[aria-pressed="true"]{color:var(--paper)}
+.switch svg{width:20px;height:20px}
+
+.ticks{position:absolute;z-index:25;top:56%;left:max(16px,env(safe-area-inset-left,0px));transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 8px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.ticks .num{font:600 11px var(--f-mono);margin-bottom:3px}
+.ticks button{width:18px;height:8px;display:grid;place-items:center}
+.ticks button i{width:6px;height:6px;border-radius:50%;background:rgba(18,20,16,.25);transition:all .3s var(--ease)}
+.ticks button.on{height:18px}
+.ticks button.on i{height:16px;border-radius:3px;background:var(--green)}
+
+.dock{position:absolute;z-index:20;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:16px;padding:10px;padding-inline-start:22px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 14px 40px rgba(0,0,0,.10);max-width:calc(100vw - 32px)}
+.cap{min-width:0}
+.cap .row1{display:flex;align-items:baseline;gap:10px}
+.cap .no{font:600 12px var(--f-mono);color:var(--ink-2)}
+.cap .name{font-family:var(--f-display);font-weight:600;font-size:23px;line-height:1.15;white-space:nowrap}
+.cap .meta{font-size:13px;color:var(--ink-2);margin-top:2px;white-space:nowrap}
+.cap .price{font:600 13px var(--f-mono);color:var(--ink)}
+.plus{flex:none;width:54px;height:54px;border-radius:50%;background:var(--green);color:var(--paper);display:grid;place-items:center;transition:transform .25s var(--ease);box-shadow:0 8px 20px rgba(13,74,38,.35)}
+.plus svg{width:22px;height:22px}
+.plus:hover{transform:scale(1.07) rotate(90deg)}
+.swap{animation:swap .45s var(--ease)}
+@keyframes swap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.scroll-cue{position:absolute;z-index:6;bottom:calc(96px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);font-size:12.5px;font-weight:600;color:var(--ink-2);display:flex;align-items:center;gap:6px;text-decoration:none}
+.scroll-cue svg{width:14px;height:14px;animation:bob 1.8s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(4px)}}
+
+/* ───── catalogue ───── */
+.catalog{background:var(--paper);border-top:1px solid var(--line);padding-bottom:120px}
+.cat-head{max-width:1240px;margin:0 auto;padding:56px max(20px,env(safe-area-inset-right,0px)) 18px max(20px,env(safe-area-inset-left,0px));display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:16px}
+.cat-head h2{margin:0;font-family:var(--f-display);font-size:clamp(28px,4vw,40px);font-weight:700}
+.cat-head p{margin:6px 0 0;color:var(--ink-2)}
+.search{display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:#fff;min-width:min(320px,100%)}
+.search svg{width:18px;height:18px;color:var(--ink-2)}
+.search input{border:0;outline:0;background:none;width:100%;font-size:15px}
+.chips{position:sticky;top:calc(62px + env(safe-area-inset-top,0px));z-index:30;background:var(--paper);border-bottom:1px solid var(--line)}
+.chips-in{max-width:1240px;margin:0 auto;padding:10px max(20px,env(safe-area-inset-right,0px)) 10px max(20px,env(safe-area-inset-left,0px));display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.chips-in::-webkit-scrollbar{display:none}
+.chip{flex:none;height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);font-size:13.5px;font-weight:600;white-space:nowrap}
+.chip.on{background:var(--green);color:var(--paper);border-color:var(--green)}
+.chip .n{font-family:var(--f-mono);font-size:11.5px;opacity:.65;margin-inline-start:4px}
+.sections{max-width:1240px;margin:0 auto;padding:0 max(20px,env(safe-area-inset-right,0px)) 0 max(20px,env(safe-area-inset-left,0px))}
+.sec{padding-top:34px;scroll-margin-top:130px}
+.sec h3{margin:0 0 14px;font-family:var(--f-display);font-size:22px;font-weight:600;display:flex;align-items:baseline;gap:10px}
+.sec h3 span{font:500 12.5px var(--f-mono);color:var(--ink-2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:12px}
+.card{display:grid;grid-template-rows:auto 1fr auto;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;text-align:start;transition:transform .2s var(--ease),box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(0,0,0,.07)}
+.card .ph{aspect-ratio:3/2;background:#fff;display:grid;place-items:center;overflow:hidden}
+.card .ph img{width:100%;height:100%;object-fit:contain}
+.card .ph .none{font-family:var(--f-display);font-size:30px;color:var(--green);opacity:.35}
+.card .body{padding:10px 12px 4px;display:grid;gap:2px;align-content:start}
+.card .nm{font-weight:700;font-size:15px;line-height:1.35}
+.card .pr{font:600 13px var(--f-mono);color:var(--ink-2)}
+.card .pr.ask{font-family:var(--f-body);color:var(--green)}
+.card .foot{display:flex;justify-content:space-between;align-items:center;padding:8px 12px 12px}
+.card .foot small{font-size:12px;color:var(--ink-2)}
+.card .add-mini{width:34px;height:34px;border-radius:50%;background:var(--green);color:var(--paper);display:grid;place-items:center}
+.card .add-mini svg{width:16px;height:16px}
+.empty{padding:40px 0;color:var(--ink-2);text-align:center}
+
+/* ───── view + receipt ───── */
+.lightbox{position:fixed;inset:0;z-index:50;background:rgba(231,228,220,.95);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.lb-head{position:absolute;z-index:3;inset:calc(16px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) auto max(20px,env(safe-area-inset-left,0px));display:flex;justify-content:space-between;align-items:center}
+.lb-title{display:flex;align-items:baseline;gap:12px}
+.lb-title .no{font:600 13px var(--f-mono);color:var(--ink-2)}
+.lb-title .name{font-family:var(--f-display);font-weight:700;font-size:30px}
+.x{width:44px;height:44px;border-radius:50%;background:var(--paper);border:1px solid var(--line);display:grid;place-items:center}
+.x svg{width:18px;height:18px}
+.lb-fig{position:absolute;z-index:2;top:calc(80px + env(safe-area-inset-top,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));right:max(20px,6vw);left:440px;display:grid;place-items:center}
+.lb-fig .frame{position:relative;width:min(100%,560px);max-height:100%;animation:grow .6s var(--ease)}
+.lb-fig .frame .flat{max-height:100%;object-fit:contain}
+.lb-fig .frame.duo{width:min(42%,260px)}
+.lb-fig .frame .dishbox{position:absolute;left:50%;bottom:40%;width:175%;transform:translateX(-50%);filter:drop-shadow(0 20px 20px rgba(0,0,0,.18))}
+.lb-fig .frame .packbox{width:100%;filter:drop-shadow(0 14px 18px rgba(0,0,0,.2))}
+.lb-fig .frame .flat{width:100%;border-radius:18px;background:#fff;box-shadow:0 20px 40px rgba(0,0,0,.08)}
+@keyframes grow{from{transform:scale(.55) translateY(10%);opacity:.3}to{transform:none;opacity:1}}
+
+.receipt{position:fixed;z-index:55;top:0;left:max(36px,env(safe-area-inset-left,0px));width:372px;background:var(--paper);font-family:var(--f-mono);font-size:13px;padding:24px 22px 28px;box-shadow:0 18px 40px rgba(0,0,0,.16);max-height:calc(100vh - 24px);overflow:auto;clip-path:inset(0 0 100% 0);transform:translateY(-14px);transition:clip-path 1.5s steps(16,end),transform 1.5s steps(16,end)}
+.receipt.out{clip-path:inset(0 0 -20px 0);transform:none}
+.rc-h{text-align:center;font-family:var(--f-display);font-size:24px;font-weight:700;line-height:1.1}
+.rc-sub{text-align:center;color:var(--ink-2);font-size:11.5px;margin-top:5px}
+.rule{border:0;border-top:1.5px dashed var(--ink);margin:14px 0;opacity:.5}
+.line{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:baseline;font-variant-numeric:tabular-nums}
+.line .i{color:var(--ink-2);font-size:11.5px}
+.line .t{font-family:var(--f-body);font-weight:600;font-size:14px}
+.line .d{grid-column:2/4;color:var(--ink-2);font-size:11.5px;font-family:var(--f-body)}
+.item{padding:9px 0}
+.item + .item{border-top:1px dotted rgba(18,20,16,.2)}
+.label{font-family:var(--f-body);font-size:12px;color:var(--ink-2);margin:12px 0 6px}
+.sizes{display:flex;gap:6px}
+.sizes button{flex:1;font:600 13px var(--f-mono);border:1.5px solid rgba(18,20,16,.3);border-radius:6px;padding:9px 0}
+.sizes button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.qty{display:flex;align-items:center;gap:0;border:1.5px solid rgba(18,20,16,.3);border-radius:6px;width:max-content}
+.qty button{width:40px;height:38px;font-size:18px;font-weight:600}
+.qty span{min-width:44px;text-align:center;font:600 15px var(--f-mono)}
+.total{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--f-body);font-weight:700;font-size:20px}
+.total .mono{font-size:20px}
+.note{display:flex;justify-content:space-between;gap:10px;color:var(--ink-2);font-size:12px;margin-top:4px;font-family:var(--f-body)}
+.cta{display:block;width:100%;margin-top:14px;background:var(--green);color:var(--paper);font:700 14.5px var(--f-body);padding:14px;border-radius:6px;text-align:center;text-decoration:none}
+.cta.ghost{background:none;color:var(--ink);border:1.5px solid var(--ink);margin-top:8px}
+.cta.wa{background:#1f8f4e}
+.rm{color:#a2422c;font:600 12px var(--f-body);margin-inline-start:6px}
+.barcode{height:40px;margin-top:16px;background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 4px,var(--ink) 4px 5px,transparent 5px 8px,var(--ink) 8px 11px,transparent 11px 12px)}
+.fine{text-align:center;color:var(--ink-2);font-size:10.5px;margin-top:8px;font-family:var(--f-body)}
+
+footer{background:var(--green);color:var(--paper);padding:34px max(20px,env(safe-area-inset-right,0px)) calc(34px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+footer .in{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:14px}
+footer .mono{direction:ltr;unicode-bidi:isolate}
+
+@media (max-width:720px){
+  .top{padding-inline:14px}
+  .since{display:none}
+  .top-in{grid-template-columns:1fr auto}
+  .brand b{font-size:16px}
+  .brand small{display:none}
+  .pill .txt{display:none}
+  .pill{height:38px;padding:0 11px}
+  .switch{right:10px}
+  .ticks{left:10px;padding:10px 6px}
+  .dock{left:12px;right:12px;transform:none;justify-content:space-between;border-radius:22px;padding:10px;padding-inline-start:16px}
+  .cap .name{font-size:20px}
+  .hero-copy{top:calc(70px + env(safe-area-inset-top,0px))}
+  .hero-copy p{display:none}
+  .lb-head{inset-inline:14px}
+  .lb-title .name{font-size:23px}
+  .lb-fig{left:0;right:0;top:calc(70px + env(safe-area-inset-top,0px));bottom:auto;height:34vh;padding:0 18%}
+  .receipt{left:12px;right:12px;width:auto;top:calc(70px + 34vh + 8px + env(safe-area-inset-top,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));max-height:none;padding:16px 16px 18px}
+  .receipt .rc-h.hide-sm{display:none}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .chips{top:calc(58px + env(safe-area-inset-top,0px))}
+}
+@media (prefers-reduced-motion:reduce){.receipt{transition:none}.lb-fig .frame{animation:none}.stage.morph .look{transition:none}.scroll-cue svg{animation:none}}
+</style>
+</head>
+<body>
+
+<header class="top" id="top">
+  <div class="top-in">
+    <a class="brand" href="#hero" aria-label="الشركة المتحدة للتوابل">
+      <span class="seal">م</span>
+      <span><b>الشركة المتحدة للتوابل</b><small>توريد المطاعم والمطابخ التجارية · بغداد</small></span>
+    </a>
+    <div class="since">SINCE 1993</div>
+    <div class="actions">
+      <a class="pill" href="#catalog" aria-label="كل الأصناف">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="txt">كل الأصناف</span>
+      </a>
+      <button class="pill" id="bagBtn" aria-label="الطلب">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg><span class="count" id="bagCount">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="hero" id="hero">
+  <div class="hero-copy">
+    <h1>نفس الطعم <em>بكل طلب</em></h1>
+    <p>الخلطات الأكثر طلباً بالمطاعم. اسحب الدائرة، واكبس + حتى تطلب بالكيلو.</p>
+  </div>
+  <main class="stage" id="stage" aria-label="الخلطات الأكثر طلباً"><div class="floor-ring" id="floorRing"></div></main>
+
+  <div class="switch" id="switch" data-mode="ring" role="group" aria-label="طريقة العرض">
+    <span class="knob"></span>
+    <button id="vRing" aria-pressed="true" aria-label="دائرة"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="4.5" r="2"/><circle cx="18.5" cy="8.3" r="2"/><circle cx="18.5" cy="15.7" r="2"/><circle cx="12" cy="19.5" r="2"/><circle cx="5.5" cy="15.7" r="2"/><circle cx="5.5" cy="8.3" r="2"/></svg></button>
+    <button id="vGrid" aria-pressed="false" aria-label="شبكة"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="5" height="5" rx="1.2"/><rect x="9.5" y="3" width="5" height="5" rx="1.2"/><rect x="16" y="3" width="5" height="5" rx="1.2"/><rect x="3" y="9.5" width="5" height="5" rx="1.2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/><rect x="16" y="9.5" width="5" height="5" rx="1.2"/><rect x="3" y="16" width="5" height="5" rx="1.2"/><rect x="9.5" y="16" width="5" height="5" rx="1.2"/><rect x="16" y="16" width="5" height="5" rx="1.2"/></svg></button>
+  </div>
+  <nav class="ticks" id="ticks" aria-label="الصنف الحالي"><span class="num" id="tickNum">01</span></nav>
+
+  <a class="scroll-cue" href="#catalog">كل الأصناف (<span id="totalCount"></span>)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></a>
+
+  <div class="dock">
+    <div class="cap" aria-live="polite">
+      <div id="capInner">
+        <div class="row1"><span class="no" id="capNo">01</span><span class="name" id="capName"></span></div>
+        <div class="meta"><span id="capCat"></span> · <span class="price" id="capPrice"></span></div>
+      </div>
+    </div>
+    <button class="plus" id="plus" aria-label="اطلب هذا الصنف"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+</section>
+
+<section class="catalog" id="catalog">
+  <div class="cat-head">
+    <div><h2>كل الأصناف</h2><p>الأسعار بالدينار العراقي. اختار الكمية والطلب يوصلك بالواتساب.</p></div>
+    <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="دوّر على صنف: كمون، كبسة، ريزو…" aria-label="بحث"></label>
+  </div>
+  <nav class="chips" aria-label="الأقسام"><div class="chips-in" id="chips"></div></nav>
+  <div class="sections" id="sections"></div>
+</section>
+
+<footer>
+  <div class="in">
+    <span>الشركة المتحدة للتوابل · توريد المطاعم والمطابخ التجارية · بغداد</span>
+    <span>الطلبات: <span class="mono">0771 188 8922</span></span>
+  </div>
+</footer>
+
+<div class="lightbox" id="lb" hidden>
+  <div class="lb-head">
+    <div class="lb-title"><span class="no" id="lbNo"></span><span class="name" id="lbName"></span></div>
+    <button class="x" id="lbClose" aria-label="سدّ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="lb-fig"><div class="frame" id="lbFrame"></div></div>
+</div>
+<aside class="receipt" id="receipt" aria-live="polite"></aside>
+
+<script>
+/* ================= SETTINGS (edit these) ================= */
+const WHATSAPP     = "9647711888922";
+const META_PIXEL_ID = "";            // ضع رقم البكسل هنا من Events Manager
+const DELIVERY_FEE = 5000;           // من موقعكم الحالي
+const SIZES = [                      // السعر = سعر الكيلو × الكيلوات × المعامل
+  { kg: 1,  label: "1 كغم",  mult: 1 },
+  { kg: 5,  label: "5 كغم",  mult: 1 },
+  { kg: 10, label: "10 كغم", mult: 1 },
+];
+const PRICE_NOTE = "السعر لكل كيلو"; // غيّرها إذا السعر مو للكيلو
+/* ========================================================= */
+
+const DATA = [{"category": "الأكثر طلباً", "products": [{"name": "تخمير كنتاكي", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1HmQ28Rix2ILZRmk206Yl_g5Cm811M487=w600"}, {"name": "قرمشة", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1LJvUU8pS77jMKFVmzhtE1v1cyOP9s_6y=w600"}, {"name": "زنجر", "price": 15000, "img": "https://lh3.googleusercontent.com/d/17wwo31CkpifEylTIL3GLPRg8mEGJF-GR=w600"}, {"name": "كرسبي", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1ZQhhx3tY6yALJLMFTMEANDekeGhk2vMp=w600"}, {"name": "تمن ريزو كلاسك", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1SzpmY9UnnY8bvpvAvch-j3_bSPxReej8=w600"}, {"name": "شاورما لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1bfUIHDnPF82bY4bE-6nUcMXgiPI6mZ2M=w600"}, {"name": "شاورما دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1JLhPDo_ttmyVrxnHufAVd6_A_Z4U2L7D=w600"}, {"name": "بركر لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/12cnalaQG80zCnjGlHHKdgdL7KWcCeeYH=w600"}, {"name": "بركر دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1v78XgZ-1WjNrJjp4SkLHre96mZ1T23EW=w600"}, {"name": "لحم بعجين", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1wtwMZHt8mMEcsBzSh1ZH7k1qX3m7YRfi=w600"}, {"name": "دجاج مشوي", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1pfOrXd3YcA2MMPFEYG1Ws_mVQwBLO96c=w600"}, {"name": "صلصة المتحدة", "price": 12000, "img": "https://lh3.googleusercontent.com/d/12Q9er3QWlAQIy1EcAh6RNRvmbXHT09oG=w600"}]}, {"category": "المطبخ الشرقي", "products": [{"name": "برياني لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1eZSe-fq1KFSLwkYwyJblNDUjQBAptT-w=w600"}, {"name": "برياني دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1TkxjNby2KbgrxT_DYWFRiAd8mTMUiKrU=w600"}, {"name": "دولمة", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1Ny_B6OP4rWyrzv4nnKbWBk0ak5NWFPVF=w600"}, {"name": "كبسة لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/14tL55x2u8_o8Zlm6cIfILESIvB4Ozsga=w600"}, {"name": "كبسة دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1Au-T38lIrudLfo2lH5lNmLpjLKO_EN4a=w600"}, {"name": "مقلوبة لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1LplPB1gBpETiik7sXWLBoW7BEbL-67Ht=w600"}, {"name": "مقلوبة دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1v8pqRsexgDdwyw8B6hwD2ocOvAXHLppX=w600"}, {"name": "دجاج مشوي", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1pfOrXd3YcA2MMPFEYG1Ws_mVQwBLO96c=w600"}, {"name": "كاري", "price": 14000, "img": "https://lh3.googleusercontent.com/d/1Qqd90T62hZlqwSwItxXfMIkZe_tzO5-I=w600"}, {"name": "تشريب لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1vVk1jBvyr6gtKVpNWhItvxQ4_MBK7d2r=w600"}, {"name": "تشريب دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1M-PS7Sf1k_STM-zlSo5zZHf15eowIwKm=w600"}, {"name": "قوزي", "price": 15000, "img": "https://lh3.googleusercontent.com/d/11UawSB7h_k1A8M7xFm-iO-lNMxT6M-eV=w600"}, {"name": "جدر", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1oxKp_xC1Wo163HzLsHge83IRObqDcLJW=w600"}, {"name": "فلافل", "price": 15000, "img": "https://lh3.googleusercontent.com/d/11TRsS_t7li9u5QWR2FbcTj5sofh-yka0=w600"}, {"name": "قيمة", "price": 14000, "img": "https://lh3.googleusercontent.com/d/1TMFyD4etN-H7Z26lPWGZiOjvEt6RDNyX=w600"}, {"name": "بهارات السبعة", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1zhNIDNpfhT-6Y9hvzUhLAX9h2K3qQdaP=w600"}, {"name": "سمك", "price": 15000, "img": "https://lh3.googleusercontent.com/d/18HNQbC7QOxvfqGZWM8QNTL8J_6XEUoZh=w600"}, {"name": "كاري هندي", "price": 14000, "img": "https://lh3.googleusercontent.com/d/11uQ1xFE0tAMVDu21ILDFmVQ5NJJ-O2Q6=w600"}]}, {"category": "المندي", "products": [{"name": "مندي لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1zvyZs6CqlWUuOcJGL6qTwtLuI6d9F8bX=w600"}, {"name": "مندي دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1u-Ug76TtvEdaXYduEj4JsmiptSB5MJMJ=w600"}, {"name": "تمن مندي", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1ZGN-zx3qukHz_kj3lWqv5LMPmmhzrYb1=w600"}, {"name": "حنيذ لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/14kY-3VfzweUrbvdlB29pSNoozvb8foNy=w600"}, {"name": "زربيان لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1cWtYQaUY-JrkNYRGHRV-nPQQMpAkm3eF=w600"}, {"name": "مضبي لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1qp8Fv5pPPv7EYY0Ewo2Aec77Fif0Xz7M=w600"}, {"name": "مضبي دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1bdnEnVycWtOHQjWlxFLLKFst4c06C8RO=w600"}]}, {"category": "المشويات", "products": [{"name": "كباب لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1Fpd5MG3zMkolpOJ8vKshzNySN-V1vA6T=w600"}, {"name": "كباب دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1eq68uJ5b1n3c6ROSGBpIl2KS2o-WquZR=w600"}, {"name": "تكة لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1Pnc9krzHSBKzNIaucb_u_BNwAX9gthiH=w600"}, {"name": "تكة دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/18XZsJSNJ8TYQ4x1NK1nC6OlOOF9cm_D5=w600"}, {"name": "دجاج مسحب", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1CKj5ow8uGZbCcLKpCpn_X2Lw0NQZOEiM=w600"}, {"name": "شيش طاووق", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1wAFoQ2Qg8zLqXo2wbZzCDwNL6vmChhX8=w600"}, {"name": "عرايس لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1SzPOPSf0kAaorDOTF9eYvOsYW17Kyn8h=w600"}, {"name": "عرايس دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1uESqiiG5CYnio5UgWhr_b9hS-sW0DYT6=w600"}, {"name": "كباب هندي", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1kW-9ftS4zGMlB-dJhv52bwy_snqVo4MH=w600"}, {"name": "اجنحة مشوية", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1zS1FHhF5RvQNlIcEyoY27kvoIycd21B_=w600"}, {"name": "ضلوع لحم", "price": 15000, "img": null}, {"name": "كباب باذنجان", "price": 15000, "img": null}]}, {"category": "المطبخ الغربي", "products": [{"name": "ستيك لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1t1QA2oIcFJ1gCuTpNQDAjWJ3E_i-tGnY=w600"}, {"name": "ستيك دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1cViXNJlXsLlqL4xqrCyN2J3VtKiWrXSb=w600"}, {"name": "سكالوب لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1j6uGf6EvTF7vNS_GiX2aieKhmT74kqyC=w600"}, {"name": "سكالوب دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1YjlgUEH19q6p9eNpSjP3Yn1Mr6PM-b0C=w600"}, {"name": "فاهيتا لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1iWwKeE7uAuwFx52ZTEBvqOqX16BXVirJ=w600"}, {"name": "فاهيتا دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/18sZfJUKTqgtUCazFJcmP4aWe-mIaeFkI=w600"}, {"name": "كوردن بلو", "price": 15000, "img": "https://lh3.googleusercontent.com/d/16i-nB-kpBx3EVT_u-VcJTu6kE6Cgtaoj=w600"}, {"name": "ستيك دجاج باربكيو", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1n-V6ut3M0SQdm9JtlJzYgmB1LwL_79HW=w600"}, {"name": "فيلادلفيا لحم", "price": 14000, "img": "https://lh3.googleusercontent.com/d/1Rgkp57Ie5HkT-wRer4yp4izAYpRKm4Lp=w600"}, {"name": "فيلادلفيا دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1y6kaj6ExsovX7A03Vwk6HPpQJqdKF8UX=w600"}]}, {"category": "المطبخ الإيطالي", "products": [{"name": "بيتزا لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1eWYRReq8osXrGY5S1Fpo6OTIqHMxQmEB=w600"}, {"name": "بيتزا دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1UzqrTTkh2qJtaecbu9Iqtq7opQFhtrGJ=w600"}, {"name": "بيتزا خضار", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1TnFITEGFDrXR7uI2nb2FY6n7c3VoiqtY=w600"}, {"name": "فوتوشيني لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1nWOIqnYjt_1wPQGnHGZUbc70akjHv1UD=w600"}, {"name": "فوتوشيني دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1nWOIqnYjt_1wPQGnHGZUbc70akjHv1UD=w600"}, {"name": "لزانيا لحم", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1oi4XTa9ig5HMGi-Wzts5OLYQmAk1jo8L=w600"}, {"name": "لزانيا دجاج", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1_V0ubSikpvFAB7T5ZV8Kq5v7SUw-lmK2=w600"}]}, {"category": "الفنكر", "products": [{"name": "فنكر كلاسك", "price": 12000, "img": "https://lh3.googleusercontent.com/d/1FJpxouQF5tVbyaVyzaaRH_5cPuR5vGkF=w600"}, {"name": "فنكر بالجبن", "price": 12000, "img": "https://lh3.googleusercontent.com/d/199-DF64j9-dIFetvmvutpZUQeHuxW1cV=w600"}, {"name": "فنكر بالاعشاب", "price": 12000, "img": "https://lh3.googleusercontent.com/d/1mfxLXZfSkicQl_kfLDROIVuw5Mi3UKYb=w600"}, {"name": "فنكر مدخن", "price": 12000, "img": "https://lh3.googleusercontent.com/d/117KS0zv5HiHY7mqTHTVETRqyKsQKi1MJ=w600"}]}, {"category": "صوصات الريزو", "products": [{"name": "ريزو كلاسك", "price": 12000, "img": "https://lh3.googleusercontent.com/d/1SzpmY9UnnY8bvpvAvch-j3_bSPxReej8=w600"}, {"name": "ريزو اعشاب", "price": 12000, "img": "https://lh3.googleusercontent.com/d/1QPtrXRQEIO_LO0V0CpcJ9-9naRn7V9MQ=w600"}, {"name": "ريزو بالجبنة", "price": 12000, "img": "https://lh3.googleusercontent.com/d/13QmfFGffxCN0pVI8ghzVRhEgc1SE5_Pn=w600"}, {"name": "ريزو سبايسي", "price": 12000, "img": "https://lh3.googleusercontent.com/d/15Tb8VVcXG6-9Hqj_05C9ggwK0Q9_1eLk=w600"}, {"name": "ريزو مدخن", "price": 12000, "img": "https://lh3.googleusercontent.com/d/1xSkr1_o91qcPpRHywweZwpMfqYdf8yrV=w600"}]}, {"category": "صوصات البركر", "products": [{"name": "بركر كلاسك", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1vpJ9QzWyWwqCSUIrkf9TSGpEUKiyqVyA=w600"}, {"name": "بركر اعشاب", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1o6aJSVjOnypJ97cI5u7Ex1N49YYzF2t6=w600"}, {"name": "بركر سبايس", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1GIH4JW6hM9ml9FV2ZquQoTZBQPqYSYl8=w600"}, {"name": "بركر بالجبنة", "price": 15000, "img": "https://lh3.googleusercontent.com/d/1-TqfUlxpL95o0envrCJGC4iosgyqfO0w=w600"}]}, {"category": "صوصات مختارة", "products": [{"name": "صوص المتحدة", "price": 12000, "img": "https://lh3.googleusercontent.com/d/12Q9er3QWlAQIy1EcAh6RNRvmbXHT09oG=w600"}, {"name": "صوص اوريجنال", "price": 12000, "img": "https://lh3.googleusercontent.com/d/1Gv51GT1zeKs8sb8UEBVLOC6o5OjXKwz1=w600"}, {"name": "صوص الديد هوت", "price": 12000, "img": "https://lh3.googleusercontent.com/d/1NL2q97bF2wGJObAVBGXuWlsNaP8hSEL3=w600"}]}, {"category": "النكهات", "products": [{"name": "جبنة الشيدر", "price": 10000, "img": "https://lh3.googleusercontent.com/d/1pnQE5vauH7mmv-9ek3QyKl4DgbbY1xNy=w600"}, {"name": "جبنة فرنسية", "price": 9000, "img": "https://lh3.googleusercontent.com/d/1xwLHu40x48QuiohnQIrosjnqa2htQXCC=w600"}, {"name": "ماجي دجاج", "price": 8000, "img": "https://lh3.googleusercontent.com/d/1292eB1VzX5Zy32kFUoD179g5QgMmNHm8=w600"}, {"name": "ماجي لحم", "price": 8000, "img": "https://lh3.googleusercontent.com/d/1OU03CBef5qeya6fAENcjPZ77nnGyc-fH=w600"}, {"name": "نكهة الدخان", "price": 9000, "img": "https://lh3.googleusercontent.com/d/1BD2yx2nRbSXNyQf_oP94Evq3sEpJHp5e=w600"}, {"name": "نكهة الخل والملح", "price": 8000, "img": "https://lh3.googleusercontent.com/d/19qUfeKsRNYIJ8g-I8_DXn07pJkbglvE8=w600"}, {"name": "اللبن بالاعشاب", "price": 8000, "img": "https://lh3.googleusercontent.com/d/1Udwi6KB1hDorZiP8vDDOuaezOVq_yjLf=w600"}, {"name": "سبايسي", "price": 9000, "img": "https://lh3.googleusercontent.com/d/1fCw_WLRXRhyqD1ERcTOgq9gPYfSukfBQ=w600"}]}, {"category": "البقصم الهولندي", "products": [{"name": "بقصم برتقالي", "price": 4000, "img": "https://lh3.googleusercontent.com/d/1Fj7yEJd2EZuClMRvYj1PEwPHCdakfW7P=w600"}, {"name": "بقصم اصفر", "price": 4000, "img": "https://lh3.googleusercontent.com/d/1IkP4pF02uTNRYKVbUdV0oW3DCKWT4fj-=w600"}]}, {"category": "المواد الخام", "products": [{"name": "فلفل حار", "price": null, "img": "https://lh3.googleusercontent.com/d/1xHoyuixP-RutnPGKPtgN1i1jtcjacVjO=w600"}, {"name": "فلفل باكستاني", "price": null, "img": "https://lh3.googleusercontent.com/d/1Gte6MCFwz3cB7_0aclsAAYh85gdZ6Aoe=w600"}, {"name": "كمون", "price": null, "img": "https://lh3.googleusercontent.com/d/1LlMKfxHWBpbFZXghhHIWsWDQIUWwIe5e=w600"}, {"name": "شاي كجرات", "price": null, "img": "https://lh3.googleusercontent.com/d/1cryKoLmfdlsPFer2cBYCWAlR0Ncy-feo=w600"}, {"name": "يانسون", "price": null, "img": "https://lh3.googleusercontent.com/d/1XJnwyz1JxMutZp4i5bA2P_BhFcqIHsJb=w600"}, {"name": "ورد محمدي", "price": null, "img": "https://lh3.googleusercontent.com/d/16tojoQX9XNQULOjCixl4DDeR1zFyplwn=w600"}, {"name": "ورد جوري", "price": null, "img": "https://lh3.googleusercontent.com/d/1_ANxTT-bBUrcQyA-unhb_scDonylptV2=w600"}, {"name": "ميرامية", "price": null, "img": "https://lh3.googleusercontent.com/d/1MSX3dH_bxTqsVlXCH-5DAWpfD9IUA20v=w600"}, {"name": "اوريغانو", "price": null, "img": "https://lh3.googleusercontent.com/d/1onlIWtWdYxS-_a-9jvJdLX0hkHbgNxER=w600"}, {"name": "بذور الشيا", "price": null, "img": "https://lh3.googleusercontent.com/d/1Jbv7tPxRQhShLjfPuGicgqOnnbYxnUSu=w600"}, {"name": "نعناع", "price": null, "img": "https://lh3.googleusercontent.com/d/14PsnEAqvzB7_d86KxwgWHYhzuMbabCiH=w600"}, {"name": "حلبة", "price": null, "img": "https://lh3.googleusercontent.com/d/1ZbMD1o2nT5VIgBGwkAhVGiWyd2-adLJY=w600"}, {"name": "ليموندوزي", "price": null, "img": "https://lh3.googleusercontent.com/d/1GZj3JdG7JiDOKaPcZoxO6LqSexirDr8y=w600"}, {"name": "صودا", "price": null, "img": "https://lh3.googleusercontent.com/d/1n4hMyOTqYOSCsPQVp7Ly53reD-N9FTFI=w600"}, {"name": "ورق غار", "price": null, "img": "https://lh3.googleusercontent.com/d/1H-WVtjjwUNxMyQO9l1uobXPae8Tbf-GO=w600"}, {"name": "حبة سوداء", "price": null, "img": "https://lh3.googleusercontent.com/d/1-xYuKhVdCePXlIWRFW1_-nlul4c9EInT=w600"}, {"name": "بطنج", "price": null, "img": "https://lh3.googleusercontent.com/d/1hF0ULoel-zhcGby1_d_hEU5kZitOssNm=w600"}, {"name": "كبابة", "price": null, "img": "https://lh3.googleusercontent.com/d/13x1PQ8MOpOhhAb8vUwR9fHFSJo7hzgnO=w600"}, {"name": "فلفل اسود", "price": null, "img": "https://lh3.googleusercontent.com/d/1tXxzkNWWbhLE0faQjbS8c3_rLzd30ODK=w600"}, {"name": "فلفل ابيض", "price": null, "img": "https://lh3.googleusercontent.com/d/1EgtqbwijrKRH4Jr5KOyxUzC3PURnp9uq=w600"}, {"name": "كركم راجبوري", "price": null, "img": "https://lh3.googleusercontent.com/d/1aj4M7S4v89voBU5ZT4lo-9zVlb4wiIpl=w600"}, {"name": "دارسين مطحون", "price": null, "img": "https://lh3.googleusercontent.com/d/1BVTBx3Vl6ASc6YB7pqBKvAI9LPJ67sZ3=w600"}, {"name": "دارسين ميكار", "price": null, "img": "https://lh3.googleusercontent.com/d/14i2ZcsmkaSNy6ZDockmG-MjWkUNSrzcX=w600"}, {"name": "دارسين بوري", "price": null, "img": "https://lh3.googleusercontent.com/d/1chfEAqDPc-efqB7jPmWGvo3VGCfDONkr=w600"}, {"name": "هيل", "price": null, "img": "https://lh3.googleusercontent.com/d/17TE9dIL_tq-PXrRoP7ROxhZOaz3FcUCS=w600"}, {"name": "بصل", "price": null, "img": "https://lh3.googleusercontent.com/d/1DiLL5X2fMm90gkcZVyUj_G13MOcUHZZZ=w600"}, {"name": "شرائح بصل", "price": null, "img": "https://lh3.googleusercontent.com/d/1zrTZ2Z4FSkU87Pzy-zzzfauqEH31ATh1=w600"}, {"name": "ثوم بودرة عادي", "price": null, "img": "https://lh3.googleusercontent.com/d/15hiG4QCukD4FMJi5cCM17yht2pxjqUAa=w600"}, {"name": "ثوم امريكي", "price": null, "img": "https://lh3.googleusercontent.com/d/1TRZ21DJ6Mp6G43zIJuq3ZvltDQR-ljGA=w600"}, {"name": "شرائح ثوم", "price": null, "img": "https://lh3.googleusercontent.com/d/18YvcLArhsfW4rIj-mvFkYa_dYlBT_Lr-=w600"}, {"name": "كزبرة", "price": null, "img": "https://lh3.googleusercontent.com/d/1AgsOjAdzWSQHY62CnHhOHtfQi94I9KQC=w600"}, {"name": "زنجبيل", "price": null, "img": "https://lh3.googleusercontent.com/d/1gTCrNsyMP0fCabVdr2dYG_jZH5POvkdE=w600"}, {"name": "حبة حلوة", "price": null, "img": "https://lh3.googleusercontent.com/d/1I_gKqi50dPvltZJ7OUu9TSV17r60jKey=w600"}, {"name": "جوزة الطيب", "price": null, "img": "https://lh3.googleusercontent.com/d/1vtYYrOOhbZPFObfQufPfI-x9tllxU2h0=w600"}, {"name": "قرنفل", "price": null, "img": "https://lh3.googleusercontent.com/d/1t2bDwKIl4hmFnl0ttSbkNWLV9At_cjAB=w600"}, {"name": "روزماري", "price": null, "img": "https://lh3.googleusercontent.com/d/1aNpcLI8mp6QrLAjFN0qrzZ7tAmHfTmc1=w600"}, {"name": "زعتر", "price": null, "img": "https://lh3.googleusercontent.com/d/184R0p1RY-2fBBNRy9jSgM0326Wq7JNEk=w600"}, {"name": "بابريكا بودر", "price": null, "img": "https://lh3.googleusercontent.com/d/19iOHQfMAJqlEw1d4Ppm2W8wm8EmPshIM=w600"}, {"name": "بابريكا خشنة", "price": null, "img": "https://lh3.googleusercontent.com/d/17OEZWVZJTNytXnIBplIM6xYDqv9ZwijQ=w600"}, {"name": "باربكيو مدخن", "price": null, "img": "https://lh3.googleusercontent.com/d/1cuuHl1Btr8HMooieElz8s0u4l5zYqnYc=w600"}, {"name": "سماك", "price": null, "img": "https://lh3.googleusercontent.com/d/1l9txYOmB1Ta8VlXn3ol3Kcu-SkpZMovh=w600"}, {"name": "نومي بصرة", "price": null, "img": "https://lh3.googleusercontent.com/d/1h28PSlxJzsYcGgC0auUwpafu4tt88qIr=w600"}]}, {"category": "معامل المصنعات الغذائية", "products": [{"name": "كبة موصلية", "price": null, "img": "https://lh3.googleusercontent.com/d/1XUT7UugZDuBAQ_-RZgKE24MQJyWCxDig=w600"}, {"name": "كبة حلب", "price": null, "img": "https://lh3.googleusercontent.com/d/1On0hMM82qg9qXquhaYSJ0qJ-BS2J4wZy=w600"}, {"name": "كبة السراي", "price": null, "img": "https://lh3.googleusercontent.com/d/1mUECPNyvUs08cZm8CDKCWBSp8mAk89qq=w600"}, {"name": "بركر لحم", "price": null, "img": "https://lh3.googleusercontent.com/d/12cnalaQG80zCnjGlHHKdgdL7KWcCeeYH=w600"}, {"name": "بركر دجاج", "price": null, "img": "https://lh3.googleusercontent.com/d/1v78XgZ-1WjNrJjp4SkLHre96mZ1T23EW=w600"}, {"name": "سكالوب لحم", "price": null, "img": "https://lh3.googleusercontent.com/d/1X5dcrtOLa6JuHqA6RtUIew9-Doc46cW6=w600"}, {"name": "سكالوب دجاج", "price": null, "img": "https://lh3.googleusercontent.com/d/1CFJ76hr6vP3EYU-mCXjP3q-vjgav6q0L=w600"}, {"name": "كباب لحم", "price": null, "img": "https://lh3.googleusercontent.com/d/1U7wnBSmXlATMkl3ss_OLsh8iP8dYkOc1=w600"}, {"name": "باسطرمة", "price": null, "img": "https://lh3.googleusercontent.com/d/1TD2KwXvtG_O-OwiDhXyH_HW_f14C-grD=w600"}, {"name": "بتيتة چاب", "price": null, "img": "https://lh3.googleusercontent.com/d/1pHfIgvvbufCYRnkSUiNnmstO3G20uYb7=w600"}, {"name": "ناكيت", "price": null, "img": "https://lh3.googleusercontent.com/d/1EdFEKYGrwFhSmpCW2y4cp70lYJzRZwgc=w600"}]}];
+const RING = [{"name": "تخمير كنتاكي", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090144_7ce02b0d-0737-418b-a854-a0932f3867c8.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090613_76adfb21-8d3c-4879-9cb2-dd32016b85c6.png", "pb": [0.275, 0.048, 0.707, 0.892, 750, 500], "db": [0.04, 0.038, 0.877, 0.953, 2048, 2048]}, {"name": "زنجر", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090146_64ffc668-f2f0-48c1-82a9-f26e7bf5927c.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_085949_30e9c87d-fd5a-48eb-9a08-8f8ffc04e221.png", "pb": [0.287, 0.04, 0.718, 0.927, 750, 500], "db": [0.01, 0.087, 0.992, 0.923, 2048, 2048]}, {"name": "كرسبي", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090147_9328e660-0608-4e99-9f89-520557e4b8f6.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090606_1b38dbb7-c1cf-4622-b49a-73d47fdaa9ab.png", "pb": [0.308, 0.043, 0.698, 0.943, 750, 500], "db": [0.057, 0.105, 0.947, 0.912, 2048, 2048]}, {"name": "شاورما دجاج", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090148_9ced1a16-c8ef-4efb-a692-6dc2101668c9.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090002_9e59cec7-622a-4229-b315-f8f97baf3665.png", "pb": [0.31, 0.095, 0.693, 0.895, 750, 500], "db": [0.017, 0.053, 0.98, 0.97, 2048, 2048]}, {"name": "شاورما لحم", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090150_5bfede72-1971-497a-91a0-aeb0f8c2b4da.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090216_56216299-6367-4cd4-8a04-96adae520db4.png", "pb": [0.285, 0.092, 0.717, 0.927, 750, 500], "db": [0.21, 0.0, 0.79, 1.0, 2048, 2048]}, {"name": "بركر لحم", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090151_ee4ca85b-61a0-4370-9890-32c482d2af1d.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090608_47f57ab2-b86e-4ab3-9c2b-140f4b18d86f.png", "pb": [0.325, 0.135, 0.687, 0.87, 750, 500], "db": [0.003, 0.13, 0.988, 0.897, 2048, 2048]}, {"name": "تمن ريزو كلاسك", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090153_db1d8881-225d-4271-a800-3090a0068477.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090545_c43e7563-69a2-4bd9-a2e4-f71a5085e4ae.png", "pb": [0.297, 0.045, 0.723, 0.927, 750, 500], "db": [0.008, 0.045, 0.995, 0.932, 2048, 2048]}, {"name": "كبسة دجاج", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090102_af42d3ec-e96f-4c48-8c08-4aa35848d768.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090011_99e26ffe-ec1e-47fe-9978-969da9e5dedc.png", "pb": [0.298, 0.19, 0.715, 0.858, 750, 500], "db": [0.005, 0.055, 0.992, 0.957, 2048, 2048]}, {"name": "مندي لحم", "pack": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090103_e2857d32-82ae-438b-bc49-f5277d559735.png", "dish": "https://d8j0ntlcm91z4.cloudfront.net/user_3DtEigoWMvdnqTZHNbTm2EceD3G/hf_20261112_090546_77cadd6c-a8de-4b04-ac74-ec8c91804318.png", "pb": [0.323, 0.098, 0.688, 0.907, 750, 500], "db": [0.032, 0.195, 0.962, 0.825, 2048, 2048]}];
+
+const fmt = n => Number(n).toLocaleString("en-US");
+const pad = n => String(n).padStart(2,"0");
+const $ = id => document.getElementById(id);
+
+/* ---------- Meta Pixel ---------- */
+(function(){
+  if (!META_PIXEL_ID) return;
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', META_PIXEL_ID); fbq('track','PageView');
+})();
+function track(ev, params, custom){
+  try {
+    if (window.fbq) custom ? fbq('trackCustom', ev, params) : fbq('track', ev, params);
+    console.log('[pixel]', ev, params);
+  } catch(e){}
+}
+
+/* ---------- catalogue index ---------- */
+const ALL = [];
+DATA.forEach((c,ci) => c.products.forEach((p,pi) => ALL.push({...p, cat:c.category, id:`p${ci}-${pi}`})));
+const byName = n => ALL.find(p => p.name === n);
+$("totalCount").textContent = ALL.length;
+
+/* ---------- ring ---------- */
+const N = RING.length, STEP = 2*Math.PI/N;
+let rot = 0, target = 0, vel = 0, mode = "ring";
+let dragging = false, dragX = 0, dragY = 0, dragStart = 0, moved = 0, lastDx = 0, axis = null;
+let lastInteract = performance.now(), lbOpen = false, bagOpen = false;
+const stage = $("stage"), ring = $("floorRing");
+
+function geo(){
+  const w = innerWidth, h = stage.clientHeight, phone = w <= 720;
+  if (phone) return { phone, foot: h*0.80, RX: w*0.80, RY: h*0.08, figW: Math.min(w*0.34, 150) };
+  return { phone, foot: h*0.80, RX: Math.min(w*0.34, 560), RY: h*0.11, figW: Math.min(w*0.10, h*0.21, 190) };
+}
+/* bb = [x0,y0,x1,y1] of the visible pixels, as fractions; w,h = source size. The box takes the subject's shape; the image is shifted inside it. */
+function crop(cls, src, bb, alt){
+  const [x0,y0,x1,y1,w,h] = bb, bw = x1-x0, bh = y1-y0;
+  return `<div class="crop ${cls}" style="aspect-ratio:${(bw*w).toFixed(1)}/${(bh*h).toFixed(1)}"><img src="${src}" alt="${alt}" style="width:${(100/bw).toFixed(2)}%;left:${(-x0/bw*100).toFixed(2)}%;top:${(-y0/bh*100).toFixed(2)}%"></div>`;
+}
+const ringItems = RING.map(r => ({...byName(r.name), ...r}));
+const els = ringItems.map((it,i) => {
+  const d = document.createElement("div");
+  d.className = "look";
+  d.innerHTML = `<div class="fig">${crop("dishbox", it.dish, it.db, "")}<div class="shadow"></div>${crop("packbox", it.pack, it.pb, it.name)}</div>`;
+  d.addEventListener("click", () => { if (moved < 6) { if (mode === "grid" || i === frontIndex()) openProduct(it, true); else goTo(i); } });
+  stage.appendChild(d);
+  return d;
+});
+const wrap = i => ((i % N) + N) % N;
+const frontIndex = () => wrap(Math.round(rot));
+function sizeFigs(){
+  const g = geo();
+  els.forEach(el => el.firstChild.style.width = g.figW + "px");
+  ring.style.width = (g.RX*2) + "px"; ring.style.height = (g.RY*2) + "px";
+  ring.style.top = (g.foot - g.RY*1.4) + "px"; ring.style.marginLeft = (-g.RX) + "px";
+}
+function layoutRing(){
+  const g = geo();
+  els.forEach((el,i) => {
+    const a = (i - rot) * STEP, t = (Math.cos(a) + 1) / 2;
+    const x = -Math.sin(a) * g.RX, y = g.foot - (1 - t) * g.RY * 2;
+    const s = 0.38 + 0.62 * Math.pow(t, 1.4);
+    el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) scale(${s.toFixed(4)})`;
+    el.style.filter = `blur(${((1-t)*2.6).toFixed(2)}px)`;
+    el.style.opacity = (0.62 + 0.38*t).toFixed(3);
+    el.style.zIndex = Math.round(t*100);
+  });
+}
+function layoutGrid(){
+  const g = geo(), w = innerWidth, h = stage.clientHeight;
+  const top = g.phone ? 150 : 170, bot = 120, ch = (h - top - bot) / 3;
+  const s = Math.min((ch * 0.85) / (g.figW * 2.1), 0.7);
+  const cw = Math.min(g.phone ? w*0.29 : w*0.15, ch*1.1);
+  els.forEach((el,i) => {
+    const c = i % 3, r = Math.floor(i/3);
+    el.style.transform = `translate3d(${(1-c)*cw}px,${top + (r+1)*ch}px,0) scale(${s.toFixed(4)})`;
+    el.style.filter = "blur(0px)"; el.style.opacity = 1; el.style.zIndex = 10 + r;
+    el.style.transitionDelay = `${(r*2 + c) * 55}ms`;
+  });
+}
+function setMode(m){
+  if (m === mode) return;
+  mode = m;
+  $("switch").dataset.mode = m;
+  $("vRing").setAttribute("aria-pressed", m === "ring");
+  $("vGrid").setAttribute("aria-pressed", m === "grid");
+  stage.classList.add("morph"); stage.classList.toggle("grid-mode", m === "grid");
+  if (m === "grid") layoutGrid(); else { els.forEach((e,i) => e.style.transitionDelay = `${(N-1-i)*40}ms`); layoutRing(); }
+  clearTimeout(setMode.t);
+  setMode.t = setTimeout(() => { stage.classList.remove("morph"); els.forEach(e => e.style.transitionDelay = ""); }, 1300);
+  lastInteract = performance.now();
+}
+const ticks = $("ticks");
+ringItems.forEach((it,i) => { const b = document.createElement("button"); b.setAttribute("aria-label", it.name); b.innerHTML = "<i></i>"; b.onclick = () => { if (mode === "grid") setMode("ring"); goTo(i); }; ticks.appendChild(b); });
+let capShown = -1;
+function updateCaption(){
+  const i = frontIndex(); if (i === capShown) return; capShown = i;
+  const it = ringItems[i];
+  $("capNo").textContent = pad(i+1); $("capName").textContent = it.name; $("capCat").textContent = it.cat;
+  $("capPrice").textContent = it.price ? `${fmt(it.price)} د.ع / كغم` : "السعر بالواتساب";
+  const inner = $("capInner"); inner.classList.remove("swap"); void inner.offsetWidth; inner.classList.add("swap");
+  $("tickNum").textContent = pad(i+1);
+  [...ticks.querySelectorAll("button")].forEach((b,j) => b.classList.toggle("on", j === i));
+}
+function tick(now){
+  if (mode === "ring"){
+    const heroVisible = scrollY < innerHeight * 0.6;
+    if (!dragging && !lbOpen && !bagOpen && heroVisible && now - lastInteract > 5000){ target += 1; lastInteract = now; }
+    if (!dragging){ vel += (target - rot) * 0.08; vel *= 0.74; rot += vel; if (Math.abs(target-rot) < 5e-4 && Math.abs(vel) < 5e-4) rot = target; }
+    else rot += (target - rot) * 0.5;
+    if (!stage.classList.contains("morph")) layoutRing();
+    updateCaption();
+  }
+  requestAnimationFrame(tick);
+}
+function goTo(i){ let d = i - frontIndex(); if (d > N/2) d -= N; if (d < -N/2) d += N; target = Math.round(target) + d; lastInteract = performance.now(); }
+stage.addEventListener("pointerdown", e => { if (mode !== "ring") return; dragging = true; axis = null; moved = 0; dragX = e.clientX; dragY = e.clientY; dragStart = target; lastDx = 0; });
+stage.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  const dx = e.clientX - dragX, dy = e.clientY - dragY;
+  if (!axis && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) { axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y"; if (axis === "x") { stage.setPointerCapture(e.pointerId); stage.classList.add("dragging"); } }
+  if (axis !== "x") return;
+  moved = Math.max(moved, Math.abs(dx)); lastDx = dx;
+  target = dragStart + dx / (geo().RX * 0.7); lastInteract = performance.now();
+});
+const endDrag = () => { if (!dragging) return; dragging = false; stage.classList.remove("dragging"); if (axis === "x") target = Math.round(target + (Math.abs(lastDx) > 30 ? Math.sign(lastDx)*0.3 : 0)); lastInteract = performance.now(); };
+stage.addEventListener("pointerup", endDrag); stage.addEventListener("pointercancel", endDrag);
+addEventListener("keydown", e => {
+  if (e.key === "Escape"){ closeAll(); return; }
+  if (lbOpen || bagOpen || mode !== "ring" || scrollY > innerHeight*0.5 || document.activeElement === $("q")) return;
+  if (e.key === "ArrowLeft"){ target += 1; lastInteract = performance.now(); }
+  if (e.key === "ArrowRight"){ target -= 1; lastInteract = performance.now(); }
+  if (e.key === "Enter") openProduct(ringItems[frontIndex()], true);
+});
+addEventListener("resize", () => { sizeFigs(); mode === "grid" ? layoutGrid() : layoutRing(); });
+addEventListener("scroll", () => $("top").classList.toggle("solid", scrollY > 40), {passive:true});
+$("vRing").onclick = () => setMode("ring");
+$("vGrid").onclick = () => setMode("grid");
+$("plus").onclick = () => openProduct(ringItems[frontIndex()], true);
+
+/* ---------- catalogue ---------- */
+const chips = $("chips"), sections = $("sections");
+function cardHTML(p){
+  return `<button class="card" data-id="${p.id}">
+    <div class="ph">${p.img ? `<img loading="lazy" src="${p.img}" alt="${p.name}">` : `<span class="none">م</span>`}</div>
+    <div class="body"><span class="nm">${p.name}</span>${p.price ? `<span class="pr">${fmt(p.price)} د.ع / كغم</span>` : `<span class="pr ask">السعر حسب الكمية</span>`}</div>
+    <div class="foot"><small>1 · 5 · 10 كغم</small><span class="add-mini" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></div>
+  </button>`;
+}
+function renderCatalog(q=""){
+  q = q.trim();
+  const norm = s => s.replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي");
+  let html = "", shown = 0;
+  DATA.forEach((c,ci) => {
+    const list = ALL.filter(p => p.cat === c.category && (!q || norm(p.name).includes(norm(q))));
+    if (!list.length) return; shown += list.length;
+    html += `<section class="sec" id="cat-${ci}"><h3>${c.category}<span>${list.length}</span></h3><div class="grid">${list.map(cardHTML).join("")}</div></section>`;
+  });
+  sections.innerHTML = html || `<div class="empty">ماكو صنف بهالاسم. جرّب اسم ثاني، أو اسألنا بالواتساب.</div>`;
+  sections.querySelectorAll(".card").forEach(b => b.onclick = () => openProduct(ALL.find(p => p.id === b.dataset.id), false));
+}
+chips.innerHTML = DATA.map((c,ci) => `<button class="chip" data-ci="${ci}">${c.category}<span class="n">${c.products.length}</span></button>`).join("");
+chips.querySelectorAll(".chip").forEach(b => b.onclick = () => { $("q").value = ""; renderCatalog(); document.getElementById("cat-"+b.dataset.ci)?.scrollIntoView({behavior:"smooth"}); });
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ const ci = e.target.id.split("-")[1]; chips.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c.dataset.ci === ci)); chips.querySelector(`[data-ci="${ci}"]`)?.scrollIntoView({inline:"center",block:"nearest"}); } }), {rootMargin:"-40% 0px -55% 0px"});
+function observe(){ io.disconnect(); sections.querySelectorAll(".sec").forEach(s => io.observe(s)); }
+$("q").addEventListener("input", e => { renderCatalog(e.target.value); observe(); });
+renderCatalog(); observe();
+
+/* ---------- product receipt ---------- */
+const lb = $("lb"), frame = $("lbFrame"), receipt = $("receipt");
+const bag = [];
+let cur = null, pick = { size: 0, qty: 1 };
+const stamp = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}  ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const linePrice = (p, si, qty) => p.price ? p.price * SIZES[si].kg * SIZES[si].mult * qty : null;
+let orderNo = null;
+function newOrderNo(){ return "MT-" + String(Math.floor(1000 + Math.random()*9000)); }
+
+function printReceipt(html){
+  receipt.classList.remove("out"); receipt.innerHTML = html; receipt.scrollTop = 0; void receipt.offsetWidth;
+  requestAnimationFrame(() => receipt.classList.add("out"));
+}
+function openProduct(p, fromRing){
+  cur = p; pick = { size: 0, qty: 1 }; lbOpen = true; bagOpen = false;
+  document.body.classList.add("locked");
+  const ri = ringItems.findIndex(r => r.name === p.name);
+  $("lbNo").textContent = p.cat; $("lbName").textContent = p.name;
+  const it = ri >= 0 ? ringItems[ri] : null;
+  frame.className = it ? "frame duo" : "frame";
+  frame.innerHTML = it ? `${crop("dishbox", it.dish, it.db, "")}${crop("packbox", it.pack, it.pb, p.name)}`
+                       : (p.img ? `<img class="flat" src="${p.img}" alt="${p.name}">` : "");
+  frame.style.animation = "none"; void frame.offsetWidth; frame.style.animation = "";
+  lb.hidden = false;
+  printReceipt(productReceipt());
+  track("ViewContent", { content_name: p.name, content_category: p.cat, content_ids: [p.id], content_type: "product", value: p.price || 0, currency: "IQD" });
+}
+function productReceipt(){
+  const p = cur, total = linePrice(p, pick.size, pick.qty);
+  return `
+    <div class="rc-h hide-sm">الشركة المتحدة للتوابل</div>
+    <div class="rc-sub">${stamp()}</div>
+    <hr class="rule">
+    <div class="line"><span class="i">01</span><span class="t">${p.name}</span><span class="mono">${p.price ? fmt(p.price) : "—"}</span>
+      <span class="d">${p.cat} · ${p.price ? PRICE_NOTE : "السعر يتأكد بالواتساب حسب الكمية"}</span></div>
+    <div class="label">الكمية</div>
+    <div class="sizes" role="group" aria-label="الوزن">${SIZES.map((s,i) => `<button data-s="${i}" aria-pressed="${i === pick.size}">${s.label}</button>`).join("")}</div>
+    <div class="label">العدد</div>
+    <div class="qty"><button data-q="-1" aria-label="أقل">−</button><span>${pick.qty}</span><button data-q="1" aria-label="أكثر">+</button></div>
+    <hr class="rule">
+    <div class="total"><span>المجموع</span><span class="mono">${total ? fmt(total) : "بالواتساب"}</span></div>
+    <div class="note"><span>${SIZES[pick.size].kg * pick.qty} كغم</span><span>د.ع</span></div>
+    <button class="cta" data-add>أضف للطلب</button>
+    <button class="cta ghost" data-close>كمّل التسوق</button>
+    <div class="barcode" aria-hidden="true"></div>`;
+}
+receipt.addEventListener("click", e => {
+  const b = e.target.closest("button,a"); if (!b) return;
+  if (b.dataset.s !== undefined){ pick.size = +b.dataset.s; receipt.innerHTML = productReceipt(); }
+  else if (b.dataset.q){ pick.qty = Math.max(1, Math.min(99, pick.qty + +b.dataset.q)); receipt.innerHTML = productReceipt(); }
+  else if (b.hasAttribute("data-add")) addToBag();
+  else if (b.hasAttribute("data-close")) closeAll();
+  else if (b.dataset.rm !== undefined){ bag.splice(+b.dataset.rm,1); updateCount(); openBag(true); }
+  else if (b.hasAttribute("data-wa")) sendOrder(b);
+});
+function updateCount(){ const c = $("bagCount"); c.textContent = bag.length; c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); setTimeout(() => c.classList.remove("bump"), 300); }
+function addToBag(){
+  const p = cur, s = SIZES[pick.size];
+  const ex = bag.find(b => b.id === p.id && b.size === pick.size);
+  if (ex) ex.qty += pick.qty; else bag.push({ id: p.id, name: p.name, size: pick.size, qty: pick.qty, unit: p.price });
+  updateCount();
+  track("AddToCart", { content_name: p.name, content_ids: [p.id], content_type: "product", value: linePrice(p, pick.size, pick.qty) || 0, currency: "IQD", contents: [{ id: p.id, quantity: pick.qty }] });
+  openBag();
+}
+
+/* ---------- order ---------- */
+function bagTotals(){
+  const priced = bag.filter(b => b.unit);
+  const sub = priced.reduce((s,b) => s + b.unit * SIZES[b.size].kg * SIZES[b.size].mult * b.qty, 0);
+  return { sub, ask: bag.length - priced.length, kg: bag.reduce((s,b) => s + SIZES[b.size].kg*b.qty, 0) };
+}
+function openBag(silent){
+  if (!orderNo) orderNo = newOrderNo();
+  lbOpen = false; lb.hidden = true; bagOpen = true; document.body.classList.add("locked");
+  const t = bagTotals();
+  const html = `
+    <div class="rc-h">طلب ${orderNo}</div>
+    <div class="rc-sub">${stamp()}</div>
+    <hr class="rule">
+    ${bag.length ? bag.map((b,k) => { const s = SIZES[b.size], v = b.unit ? b.unit*s.kg*s.mult*b.qty : null;
+      return `<div class="item line"><span class="i">${pad(k+1)}</span><span class="t">${b.name}</span><span class="mono">${v ? fmt(v) : "—"}</span><span class="d">${s.label} × ${b.qty}<button class="rm" data-rm="${k}">حذف</button></span></div>`; }).join("")
+      : `<div class="fine" style="font-size:13px;padding:10px 0">الطلب فارغ. اختار صنف واكبس «أضف للطلب».</div>`}
+    <hr class="rule">
+    <div class="note"><span>الوزن الكلي</span><span class="mono">${t.kg} كغم</span></div>
+    <div class="note"><span>التوصيل داخل بغداد</span><span class="mono">${fmt(DELIVERY_FEE)}</span></div>
+    ${t.ask ? `<div class="note"><span>${t.ask} صنف سعره يتأكد بالواتساب</span><span></span></div>` : ""}
+    <hr class="rule">
+    <div class="total"><span>المجموع</span><span class="mono">${bag.length ? fmt(t.sub + DELIVERY_FEE) : "0"}</span></div>
+    ${bag.length ? `<a class="cta wa" data-wa href="#" target="_blank" rel="noopener">اطلب بالواتساب</a>` : ""}
+    <button class="cta ghost" data-close>كمّل التسوق</button>
+    <div class="barcode" aria-hidden="true"></div>
+    <div class="fine">رقم الطلب ${orderNo} يوصل ويا رسالتك</div>`;
+  if (silent){ receipt.innerHTML = html; } else printReceipt(html);
+  const wa = receipt.querySelector("[data-wa]"); if (wa) wa.href = waLink();
+  if (!silent && bag.length) track("InitiateCheckout", { num_items: bag.length, value: t.sub, currency: "IQD", content_ids: bag.map(b => b.id) });
+}
+function waLink(){
+  const t = bagTotals();
+  const lines = bag.map(b => { const s = SIZES[b.size], v = b.unit ? b.unit*s.kg*s.mult*b.qty : null; return `- ${b.name} · ${s.label} × ${b.qty}${v ? ` = ${fmt(v)} د.ع` : " (السعر يتأكد)"}`; });
+  const msg = `هلا، أريد أطلب للمطعم.\nرقم الطلب: ${orderNo}\n\n${lines.join("\n")}\n\nالمجموع: ${fmt(t.sub)} د.ع + التوصيل ${fmt(DELIVERY_FEE)}\nالاسم/المطعم: \nالمنطقة: `;
+  return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+}
+function sendOrder(a){
+  const t = bagTotals();
+  const payload = { value: t.sub, currency: "IQD", num_items: bag.length, order_id: orderNo, content_ids: bag.map(b => b.id), contents: bag.map(b => ({ id: b.id, quantity: b.qty })) };
+  track("Contact", payload);
+  track("WhatsAppOrder", payload, true);
+  a.href = waLink();
+}
+function closeAll(){
+  lbOpen = false; bagOpen = false; lb.hidden = true; receipt.classList.remove("out");
+  document.body.classList.remove("locked"); lastInteract = performance.now();
+}
+$("lbClose").onclick = closeAll;
+$("bagBtn").onclick = () => bagOpen ? closeAll() : openBag();
+
+sizeFigs(); layoutRing(); updateCaption(); requestAnimationFrame(tick);
+</script>
+</body>
+</html>
